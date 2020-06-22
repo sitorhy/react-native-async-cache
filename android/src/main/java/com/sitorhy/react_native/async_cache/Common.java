@@ -81,8 +81,9 @@ public class Common {
         }
         int iDot = str.lastIndexOf(".");
         if (iDot >= 0) {
-            String ext = str.substring(iDot);
-            return taskId + ext;
+            String ext = str.substring(iDot + 1);
+            if (ext.length() > 0)
+                return taskId + "_" + ext;
         }
         return taskId;
     }
