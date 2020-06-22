@@ -2,6 +2,7 @@ import {NativeModules} from 'react-native';
 
 import ProgressEmitter from './ProgressEmitter';
 import PostEmitter from './PostEmitter';
+import {getUrlExtension} from "../lib/common";
 
 const {ReactNativeAsyncCache} = NativeModules;
 const {DocumentDirectory} = ReactNativeAsyncCache;
@@ -18,6 +19,14 @@ function executeDeclaredMethod(method, params) {
     }
 }
 
+function mergeOptions(options) {
+    return {
+        extension: getUrlExtension(options.url, true),
+        ...DEFAULT_OPTIONS,
+        ...options
+    };
+}
+
 const DEFAULT_OPTIONS = {
     statusCodeLeft: 200,
     statusCodeRight: 300,
@@ -30,10 +39,7 @@ const DEFAULT_OPTIONS = {
 
 export default {
     trash(options) {
-        return executeDeclaredMethod('trash', {
-            ...DEFAULT_OPTIONS,
-            ...options
-        });
+        return executeDeclaredMethod('trash', mergeOptions(options));
     },
 
     clean() {
@@ -41,10 +47,7 @@ export default {
     },
 
     remove(options) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
 
         if (!params.url) {
             return Promise.reject(new Error('remove url is required'));
@@ -54,10 +57,7 @@ export default {
     },
 
     accessible(options) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
 
         if (!params.url) {
             return Promise.reject(new Error('accessible url is required'));
@@ -67,10 +67,7 @@ export default {
     },
 
     check(options) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
 
         if (!params.url) {
             return Promise.reject(new Error('check url is required'));
@@ -80,10 +77,7 @@ export default {
     },
 
     download(options, onProgress) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
 
         if (!params.url) {
             return Promise.reject(new Error('download url is required'));
@@ -108,10 +102,7 @@ export default {
     },
 
     post(options) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
         if (!params.url) {
             return Promise.reject(new Error('post url is required'));
         } else {
@@ -125,10 +116,7 @@ export default {
     },
 
     select(options, onPosted) {
-        const params = {
-            ...DEFAULT_OPTIONS,
-            ...options
-        };
+        const params = mergeOptions(options);
         if (params.url == null) {
             return Promise.reject(new Error('select url is required'));
         } else {

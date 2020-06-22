@@ -32,6 +32,8 @@ typedef void (^AccessibleCallback)(AccessibleResult * accessible);
 
 @property(nonatomic) BOOL rewrite;
 
+@property(nonatomic) NSString * extension;
+
 - (NSString *)selectTaskId;
 
 - (NSString *)generateTargetFilePath;

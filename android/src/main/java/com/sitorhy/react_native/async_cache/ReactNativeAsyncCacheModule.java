@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedAsyncTask;
+import com.facebook.react.bridge.NativeModuleCallExceptionHandler;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -86,12 +87,19 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
             dir.delete();
     }
 
-    private void execute(Runnable task, String taskId) {
+    private void execute(Runnable task, final String taskId) {
         try {
             threadPoolExecutor.execute(task);
         } catch (RejectedExecutionException e) {
             try {
-                new GuardedAsyncTask<Runnable, Void>(this.getReactApplicationContext()) {
+                new GuardedAsyncTask<Runnable, Void>(new NativeModuleCallExceptionHandler() {
+                    @Override
+                    public void handleException(Exception e) {
+                        if (taskId != null) {
+                            tasks.remove(taskId);
+                        }
+                    }
+                }) {
                     @Override
                     protected void doInBackgroundGuarded(Runnable... runnables) {
                         runnables[0].run();
@@ -124,7 +132,7 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
                                         result.putString(Constants.URL, url);
                                         result.putInt(Constants.TOTAL, total);
                                         result.putInt(Constants.CURRENT, current);
-                                        double nextProgress = (double) current / (double) total;
+                                        double nextProgress = (double) current / (double) Math.max(0, total);
                                         if (nextProgress == 1.0 || progress[0] + STEP < nextProgress) {
                                             progress[0] = nextProgress;
                                             sendEvent("RNAsyncCacheProgress", result);
@@ -136,7 +144,7 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
                                 public void onComplete(DownloadReport report) {
                                     WritableMap result = Arguments.createMap();
                                     result.putString(Constants.PATH, report.getPath());
-                                    result.putInt(Constants.SIZE, report.getSize());
+                                    result.putDouble(Constants.SIZE, report.getSize());
                                     result.putString(Constants.URL, url);
                                     if (promise != null) {
                                         promise.resolve(result);
@@ -236,11 +244,18 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
                     result.putString(Constants.MESSAGE, urlAccessible.getMessage());
                     result.putInt(Constants.STATUS_CODE, urlAccessible.getResponseCode());
                     result.putBoolean(Constants.ACCESSIBLE, urlAccessible.isAccessible());
-                    result.putInt(Constants.SIZE, urlAccessible.getSize());
+                    result.putDouble(Constants.SIZE, urlAccessible.getSize());
                     result.putString(Constants.URL, request.getUrl());
                     promise.resolve(result);
                 } catch (IOException e) {
-                    promise.reject(e);
+                    WritableMap result = Arguments.createMap();
+                    result.putString(Constants.CONTENT_TYPE, null);
+                    result.putString(Constants.MESSAGE, e.getLocalizedMessage());
+                    result.putInt(Constants.STATUS_CODE, -1);
+                    result.putBoolean(Constants.ACCESSIBLE, false);
+                    result.putDouble(Constants.SIZE, -1);
+                    result.putString(Constants.URL, request.getUrl());
+                    promise.resolve(result);
                 }
             }
         };

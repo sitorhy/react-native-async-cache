@@ -8,14 +8,6 @@
 
 `$ react-native link react-native-async-cache`
 
-## Usage
-```javascript
-import RNAsyncCache from 'react-native-async-cache';
-
-// TODO: What to do with the module?
-RNAsyncCache;
-```
-
 ## API
 
 ### Promise select(options)
@@ -30,6 +22,7 @@ If the file downloaded, resolve the url as local path, otherwise resolve the req
 | url | NO | String | the network resource url |
 | headers | YES | Map<String,String> | request headers |
 | subDir | YES | String | name of directory where the file save to |
+| extension | YES | String | file extension, may be important for some components |
 
 + Thenable Object
 
@@ -122,6 +115,7 @@ Confirm whether the cache file exists.
 | :-----| ----: | ----: |
 | url | NO | String |
 | subDir | YES | String |
+| extension  | YES | String |
 
 + Thenable Object
 
@@ -143,6 +137,7 @@ Delete the cache file specified.
 | :-----| ----: | ----: |
 | url | NO | String |
 | subDir | YES | String |
+| extension  | YES | String |
 
 + Thenable Object
 
@@ -164,6 +159,7 @@ Cache a file manually.
 | :-----| ----: | ----: |
 | url | NO | String |
 | subDir | YES | String |
+| extension  | YES | String |
 
 + onProgress Callback
 
@@ -208,6 +204,7 @@ Execute method `select()` ignore the return value.
 | url | NO | String |
 | headers | YES | Map<String,String> |
 | subDir | YES | String |
+| extension  | YES | String |
 
 ## Cache Component
 

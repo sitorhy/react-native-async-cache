@@ -23,6 +23,7 @@ public class Request {
     private boolean accessible = false;
     private String accessibleMethod = "HEAD";
     private boolean rewrite = false;
+    private String extension = null;
 
     private String __taskId = null;
     private HashMap<String, String> __headersMap;
@@ -38,6 +39,8 @@ public class Request {
             subDir = request.getString(Constants.SUB_DIR);
         if (request.hasKey(Constants.TARGET_DIR))
             targetDir = request.getString(Constants.TARGET_DIR);
+        if (request.hasKey(Constants.EXTENSION))
+            extension = request.getString(Constants.EXTENSION);
         if (request.hasKey(Constants.ID))
             id = request.getString(Constants.ID);
         if (request.hasKey(Constants.URL))
@@ -84,7 +87,7 @@ public class Request {
     }
 
     public File generateTargetFile() {
-        return Common.generateTargetFile(targetDir, subDir, this.selectTaskId(), url);
+        return Common.generateTargetFile(targetDir, subDir, this.selectTaskId(), this.extension);
     }
 
     public File generateTargetDirectory() {
@@ -145,5 +148,13 @@ public class Request {
 
     public String getAccessibleMethod() {
         return accessibleMethod;
+    }
+
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
     }
 }

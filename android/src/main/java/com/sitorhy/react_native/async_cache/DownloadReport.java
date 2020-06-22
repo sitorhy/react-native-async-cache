@@ -4,7 +4,7 @@ public class DownloadReport {
 
     private String path;
 
-    private int size;
+    private long size;
 
     public String getPath() {
         return path;
@@ -14,11 +14,11 @@ public class DownloadReport {
         this.path = path;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
-    public void setSize(int size) {
+    public void setSize(long size) {
         this.size = size;
     }
 }

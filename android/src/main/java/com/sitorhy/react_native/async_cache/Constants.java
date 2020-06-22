@@ -23,4 +23,5 @@ public class Constants {
     public static String CURRENT = "current";
     public static String EXISTS = "exists";
     public static String REWRITE = "rewrite";
+    public static String EXTENSION = "extension";
 }

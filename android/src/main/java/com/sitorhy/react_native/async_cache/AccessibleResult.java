@@ -5,7 +5,7 @@ public class AccessibleResult {
     private boolean accessible;
     private String message;
     private String contentType;
-    private int size = -1;
+    private long size = -1;
 
     public AccessibleResult(int responseCode, String message, String contentType, boolean accessible) {
         this.responseCode = responseCode;
@@ -15,11 +15,11 @@ public class AccessibleResult {
     }
 
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
-    public void setSize(int size) {
+    public void setSize(long size) {
         this.size = size;
     }
 

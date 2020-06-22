@@ -112,4 +112,9 @@
   return @"rewrite";
 }
 
++ (NSString *)EXTENSION
+{
+  return @"extension";
+}
+
 @end

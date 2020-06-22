@@ -2,6 +2,7 @@ import React from 'react';
 
 export class RequestOptions {
     url: string;
+    extension?: string;
     id?: string;
     headers?: { [key: string]: string };
     targetDir?: string;

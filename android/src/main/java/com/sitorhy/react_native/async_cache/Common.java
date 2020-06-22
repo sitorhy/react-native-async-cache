@@ -45,9 +45,9 @@ public class Common {
         conn.setReadTimeout(timeout);
         int code = conn.getResponseCode();
         String message = conn.getResponseMessage();
-        String contentTypee = conn.getContentType();
+        String contentType = conn.getContentType();
         conn.disconnect();
-        AccessibleResult accessibleResult = new AccessibleResult(code, message, contentTypee, statusCodeLeft <= code && code <= statusCodeRight);
+        AccessibleResult accessibleResult = new AccessibleResult(code, message, contentType, statusCodeLeft <= code && code <= statusCodeRight);
         accessibleResult.setSize(conn.getContentLength());
         return accessibleResult;
     }
@@ -69,21 +69,22 @@ public class Common {
         return doc;
     }
 
-    public static String generateTargetFileName(String taskId, String url) {
-        String str = url;
-        int iQue = str.lastIndexOf("?");
-        if (iQue >= 0) {
-            str = str.substring(0, iQue);
-        }
-        int iSep = str.lastIndexOf("/");
-        if (iSep >= 0) {
-            str = str.substring(iSep + 1);
-        }
-        int iDot = str.lastIndexOf(".");
-        if (iDot >= 0) {
-            String ext = str.substring(iDot + 1);
-            if (ext.length() > 0)
-                return taskId + "_" + ext;
+    public static String generateTargetFileName(String taskId, String extension) {
+        if (extension != null && !extension.isEmpty()) {
+            String str = extension;
+            int iQue = str.lastIndexOf("?");
+            if (iQue >= 0) {
+                str = str.substring(0, iQue);
+            }
+            int iSep = str.lastIndexOf("/");
+            if (iSep >= 0) {
+                str = str.substring(iSep + 1);
+            }
+            int iDot = str.lastIndexOf(".");
+            if (iDot >= 0) {
+                String ext = str.substring(iDot);
+                return taskId + ext;
+            }
         }
         return taskId;
     }
@@ -97,13 +98,13 @@ public class Common {
         return dir;
     }
 
-    public static File generateTargetFile(String targetDir, String subDir, String taskId, String url) {
+    public static File generateTargetFile(String targetDir, String subDir, String taskId, String extension) {
         String path = targetDir + ((subDir != null && !subDir.isEmpty()) ? File.separator + subDir : "");
         File dir = new File(path);
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        return new File(path + File.separator + generateTargetFileName(taskId, url));
+        return new File(path + File.separator + generateTargetFileName(taskId, extension));
     }
 
     public static void download(DownloadFeedback feedback, Context context, String url, Map<String, String> headers, final File target, int timeout) throws IOException {
@@ -159,7 +160,7 @@ public class Common {
             if (feedback != null) {
                 DownloadReport report = new DownloadReport();
                 report.setPath(target.getAbsolutePath());
-                report.setSize(contentLength);
+                report.setSize(target.length());
                 feedback.onComplete(report);
             }
         } catch (IOException e) {

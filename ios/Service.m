@@ -50,26 +50,35 @@ static NSString * TASK_ID_PREFIX = @"rn_async_cache-";
   return [self md5:url];
 }
 
-+ (NSString *)generateTargetFileName:(NSString *)taskId extractExtFromUrl:(NSString *)url
++ (NSString *) getUrlExtension:(NSString * _Nullable)url
 {
-  NSString * str = url;
-  NSRange rangeQue = [str rangeOfString:@"?" options:NSBackwardsSearch];
-  if(rangeQue.location != NSNotFound)
+  if(url)
   {
-    str = [str substringWithRange:(NSRange){0,rangeQue.location}];
+    NSString * str = url;
+    NSRange rangeQue = [str rangeOfString:@"?" options:NSBackwardsSearch];
+    if(rangeQue.location != NSNotFound)
+    {
+      str = [str substringWithRange:(NSRange){0,rangeQue.location}];
+    }
+    NSRange rangeSep = [str rangeOfString:@"/" options:NSBackwardsSearch];
+    if(rangeSep.location != NSNotFound)
+    {
+      str = [str substringWithRange:(NSRange){rangeSep.location+1,str.length-rangeSep.location-1}];
+    }
+    NSRange rangeDot = [str rangeOfString:@"." options:NSBackwardsSearch];
+    if(rangeDot.location != NSNotFound)
+    {
+      NSString * dotExt = [str substringWithRange:(NSRange){rangeDot.location,str.length-rangeDot.location}];
+      return dotExt;
+    }
   }
-  NSRange rangeSep = [str rangeOfString:@"/" options:NSBackwardsSearch];
-  if(rangeSep.location != NSNotFound)
-  {
-    str = [str substringWithRange:(NSRange){rangeSep.location+1,str.length-rangeSep.location-1}];
-  }
-  NSRange rangeDot = [str rangeOfString:@"." options:NSBackwardsSearch];
-  if(rangeDot.location != NSNotFound)
-  {
-    NSString * dotExt = [str substringWithRange:(NSRange){rangeDot.location,str.length-rangeDot.location}];
-    return [taskId stringByAppendingString:dotExt];
-  }
-  return taskId;
+  return @"";
+}
+
++ (NSString *)generateTargetFileName:(NSString *)taskId extractExtFromUrl:(NSString *)extension
+{
+  NSString * ext = [self getUrlExtension:extension];
+  return [taskId stringByAppendingString:ext];
 }
 
 + (NSString *)generateTargetDirectoryPath:(NSString *)targetDir subDir:(NSString *)subDir
@@ -93,7 +102,7 @@ static NSString * TASK_ID_PREFIX = @"rn_async_cache-";
   return dir;
 }
 
-+ (NSString *)generateTargetFilePath:(NSString *)targetDir subDir:(NSString *)subDir taskId:(NSString *)taskId url:(NSString *)url
++ (NSString *)generateTargetFilePath:(NSString *)targetDir subDir:(NSString *)subDir taskId:(NSString *)taskId url:(NSString * _Nullable)url
 {
   NSString * dir = [self generateTargetDirectoryPath:targetDir subDir:subDir];
   return [dir stringByAppendingPathComponent:[self generateTargetFileName:taskId extractExtFromUrl:url]];

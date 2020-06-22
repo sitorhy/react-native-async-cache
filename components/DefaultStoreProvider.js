@@ -1,6 +1,8 @@
+import {randomNum} from "../lib/common";
+
 export default class {
     constructor() {
-        this.size = 100;
+        this.size = 768;
         this.caches = [];
         this.index = 0;
     }
@@ -15,15 +17,12 @@ export default class {
             const cache = this.get(url);
             if (!cache) {
                 if (this.caches.length === this.size) {
-                    this.caches[this.index++ % this.size] = {
+                    this.caches[randomNum(0, this.size - 1)] = {
                         url,
                         local,
                         message: null,
                         statusCode: null
                     };
-                    if (this.index >= this.size) {
-                        this.index = 0;
-                    }
                 } else {
                     this.caches.push({
                         url,
@@ -40,15 +39,12 @@ export default class {
         const cache = this.get(url);
         if (!cache) {
             if (this.caches.length === this.size) {
-                this.caches[this.index++ % this.size] = {
+                this.caches[randomNum(0, this.size - 1)] = {
                     url,
                     local: null,
                     statusCode,
                     message
                 };
-                if (this.index >= this.size) {
-                    this.index = 0;
-                }
             } else {
                 this.caches.push({
                     url,

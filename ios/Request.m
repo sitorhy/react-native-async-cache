@@ -36,6 +36,7 @@
   NSString * strTargetDir = options[[Constants TARGET_DIR]];
   NSString * strID = options[[Constants ID]];
   NSString * strURL = options[[Constants URL]];
+  NSString * strExt = options[[Constants EXTENSION]];
   NSDictionary * dictHeaders = options[[Constants HEADERS]];
   NSNumber * nAccessible = options[[Constants ACCESSIBLE]];
   NSNumber * nRewrite = options[[Constants REWRITE]];
@@ -80,6 +81,10 @@
   {
     self.rewrite=[nRewrite boolValue];
   }
+  if(strExt && [strExt isKindOfClass:[NSString class]])
+  {
+    self.extension=strExt;
+  }
   
   return self;
 }
@@ -100,7 +105,7 @@
 {
   if(!__targetPath)
   {
-    __targetPath = [Service generateTargetFilePath:self.targetDir subDir:self.subDir taskId:[self selectTaskId] url:self.url];
+    __targetPath = [Service generateTargetFilePath:self.targetDir subDir:self.subDir taskId:[self selectTaskId] url:self.extension];
   }
   return __targetPath;
 }
