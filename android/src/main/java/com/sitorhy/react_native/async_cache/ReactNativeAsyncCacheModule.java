@@ -132,7 +132,7 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
                                         result.putString(Constants.URL, url);
                                         result.putInt(Constants.TOTAL, total);
                                         result.putInt(Constants.CURRENT, current);
-                                        double nextProgress = (double) current / (double) Math.max(0, total);
+                                        double nextProgress = total > 0 ? (double) current / (double) total : 0;
                                         if (nextProgress == 1.0 || progress[0] + STEP < nextProgress) {
                                             progress[0] = nextProgress;
                                             sendEvent("RNAsyncCacheProgress", result);

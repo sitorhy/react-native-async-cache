@@ -39,8 +39,15 @@ public class Request {
             subDir = request.getString(Constants.SUB_DIR);
         if (request.hasKey(Constants.TARGET_DIR))
             targetDir = request.getString(Constants.TARGET_DIR);
-        if (request.hasKey(Constants.EXTENSION))
+        if (request.hasKey(Constants.EXTENSION)) {
             extension = request.getString(Constants.EXTENSION);
+            if (extension != null) {
+                extension = extension.trim();
+                if (extension.length() > 0 && extension.charAt(0) != '.') {
+                    extension = '.' + extension;
+                }
+            }
+        }
         if (request.hasKey(Constants.ID))
             id = request.getString(Constants.ID);
         if (request.hasKey(Constants.URL))

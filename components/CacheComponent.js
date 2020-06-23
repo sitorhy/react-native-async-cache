@@ -53,9 +53,13 @@ export default function (
                     message: cache.message
                 });
             } else {
+                const componentProps = {
+                    [sourceProperty || 'source']: src,
+                    ...props
+                };
                 AsyncCache.select({
                     url: src,
-                    ...(typeof mapToRequestOptions === 'function' ? mapToRequestOptions(src) : null)
+                    ...(typeof mapToRequestOptions === 'function' ? mapToRequestOptions(componentProps) : null)
                 }, (event) => {
                     set_resp(event);
                 }).then((response) => {

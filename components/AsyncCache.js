@@ -20,11 +20,18 @@ function executeDeclaredMethod(method, params) {
 }
 
 function mergeOptions(options) {
-    return {
-        extension: getUrlExtension(options.url, true),
+    const opts = {
+        extension: typeof options.url === "string" ? getUrlExtension(options.url, true) : "",
         ...DEFAULT_OPTIONS,
         ...options
     };
+    if (typeof opts.extension === "string" && opts.extension) {
+        opts.extension = opts.extension.trim();
+        if (opts.extension && opts.extension.charAt(0) !== ".") {
+            opts.extension = "." + opts.extension;
+        }
+    }
+    return opts;
 }
 
 const DEFAULT_OPTIONS = {

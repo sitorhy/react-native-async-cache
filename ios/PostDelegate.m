@@ -65,7 +65,7 @@ static double STEP = 0.036;
     total = totalBytesExpectedToWrite;
     current = totalBytesWritten;
     
-    double nextProgress = (double)current/(double)total;
+    double nextProgress = total > 0 ? (double)current/(double)total : 0;
     
     if (nextProgress == 1.0 || progress + STEP < nextProgress) {
       progress = nextProgress;
@@ -104,7 +104,8 @@ static double STEP = 0.036;
     if(!error)
     {
       [session finishTasksAndInvalidate];
-      [self.emitter emitPostedEvent:self.request.url targetPath:targetPath fileSize:total errorCode:0 errorMessage:nil taskId:[self.request selectTaskId]];
+      NSDictionary<NSFileAttributeKey, id> * attrs = [defaultManager attributesOfItemAtPath:targetPath error:nil];
+      [self.emitter emitPostedEvent:self.request.url targetPath:targetPath fileSize:[attrs fileSize] errorCode:0 errorMessage:nil taskId:[self.request selectTaskId]];
     }
     else
     {

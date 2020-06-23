@@ -11,7 +11,7 @@ export default new (class extends Emitter {
 
     handle(url, event, handler) {
         const {total, current, progress} = event;
-        const nextProgress = parseFloat((current / total).toFixed(2));
+        const nextProgress = total > 0 ? parseFloat((current / total).toFixed(2)) : 0;
         if (nextProgress !== progress) {
             handler(nextProgress, total, current, url);
             return {
