@@ -366,7 +366,7 @@ RCT_REMAP_METHOD(check,createCheckRequestWithOptions:(NSDictionary *)options res
   }];
 }
 
-- (void)rejectSelect:(RCTPromiseResolveBlock)resolve writeableResp:(NSMutableDictionary *)response reqestAddress:(NSString *)url
+- (void)rejectSelect:(RCTPromiseResolveBlock)resolve writeableResp:(NSMutableDictionary *)response requestAddress:(NSString *)url
 {
   [response setObject:url forKey:[Constants URL]];
   [response setObject:[[NSNumber alloc] initWithBool:FALSE] forKey:[Constants SUCCESS]];
@@ -388,7 +388,7 @@ RCT_REMAP_METHOD(select,createSelectRequestWithOptions:(NSDictionary *)options r
         NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
         [resp setObject:accessible.message forKey:[Constants MESSAGE]];
         [resp setObject:@(accessible.responseCode) forKey:[Constants STATUS_CODE]];
-        [self rejectSelect:resolve writeableResp:resp reqestAddress:request.url];
+        [self rejectSelect:resolve writeableResp:resp requestAddress:request.url];
       }
       else
       {
@@ -407,12 +407,12 @@ RCT_REMAP_METHOD(select,createSelectRequestWithOptions:(NSDictionary *)options r
         {
           if(isDir)
           {
-            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] reqestAddress:request.url];
+            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
           }
           else
           {
             [self post:request];
-            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] reqestAddress:request.url];
+            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
           }
         }
       }

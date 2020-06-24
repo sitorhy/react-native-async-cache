@@ -13,4 +13,6 @@ export CacheComponent from './components/CacheComponent';
 
 export CacheStoreComponent from './components/CacheStoreComponent';
 
+export StoreProvider from './components/DefaultStoreProvider';
+
 export default AsyncCache;

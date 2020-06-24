@@ -301,13 +301,14 @@ class PersistenceStoreProvider extends StoreProvider {
         super(props);
         
         // e.g. deserialize
-        AsyncStorage.getItem('caches').then(array=>{
-            this.caches=array;
+        AsyncStorage.getItem('caches').then(str=>{
+            this.caches=JSON.parse(str);
         });
     }
     
     serialize(){
         // call it at the right time
+        AsyncStorage.setItem('caches',JSON.stringify(caches));
     }
 }
 

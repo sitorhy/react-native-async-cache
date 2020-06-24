@@ -50,6 +50,8 @@ export class StoreProvider {
     get(url: string): string;
 
     set(url: string, local: string): void;
+
+    error(url: string, code: number, message: string): void
 }
 
 export class CacheStoreParam {

@@ -1,6 +1,6 @@
 {
   "name": "react-native-async-cache",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "cache network resources, videos, images.",
   "repository": {
     "type": "git",
