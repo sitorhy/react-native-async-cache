@@ -67,6 +67,22 @@ if(statusCode || message){
 return img ? <Loading /> : <Image source={{uri: img}}/>
 ```
 
++ Optional Cache Validator
+```javascript
+{
+    cacheValidator:(cache,callback)=>{
+        if(cache && !cache.local){
+            callback(cache);
+        }
+        else {
+            fs.exists(cache).then(exists=>{
+               callback(exists?cache:null);
+            });    
+        }       
+    }
+}
+```
+
 <br>
 
 ### Promise<Void> trash(options)
@@ -208,6 +224,7 @@ delegate a background download task.
 | sourceMapper | YES | Function | map url to local path |
 | onSourceMapped | YES | Function | invoked on url accepted |
 | onRequestError | YES | Function | invoked on url has been checked not accessible |
+| cacheValidator | YES | Function | confirm the cache is valid |
 
 ### Usage
 
@@ -288,7 +305,7 @@ return (
    </View>
 )
 ```
-+ Custom StoreProvider
++ Custom StoreProvider Example
 
 ```js
 import {CacheStoreComponent, StoreProvider} from 'react-native-async-cache';
@@ -297,18 +314,32 @@ import AsyncStorage from 'react-native-async-storage';
 // extend default StoreProvider
 
 class PersistenceStoreProvider extends StoreProvider {
+    access_time = 0;
+
     constructor(props) {
         super(props);
-        
-        // e.g. deserialize
         AsyncStorage.getItem('caches').then(str=>{
             this.caches=JSON.parse(str);
         });
     }
     
+    get(url){
+        if(this.access_time > 100){
+            this.access_time = 0;
+            this.serialize();
+        }
+        return super.get(url);
+    } 
+
+    
     serialize(){
         // call it at the right time
         AsyncStorage.setItem('caches',JSON.stringify(caches));
+    }
+    
+    clear(){
+        this.caches = [];
+        AsyncStorage.setItem('caches',JSON.stringify([]));
     }
 }
 

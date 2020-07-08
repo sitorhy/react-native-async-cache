@@ -65,6 +65,7 @@ export class CacheStoreParam {
     sourceMapper?: Function;
     onSourceMapped ?: Function;
     onRequestError?: Function;
+    cacheValidator?: Function
 }
 
 export class CacheStoreComponentParam {
@@ -76,6 +77,7 @@ export class CacheStoreComponentParam {
     invokeOnComponentErrorProperty?: string;
     invokeOnComponentLoadProperty?: string;
     store?: StoreProvider;
+    cacheValidator?: Function;
 }
 
 export type ProgressHandler = (progress: number, total: number, current: number, url: string) => void;

@@ -29,7 +29,8 @@ export default function (
         invokeOnComponentLoadProperty = null,
         sourceMapper = () => null,
         onSourceMapped = null,
-        onRequestError = null
+        onRequestError = null,
+        cacheValidator = null
     }
 ) {
     return React.memo((
@@ -38,44 +39,51 @@ export default function (
             ...props
         }
     ) => {
-        const [source, set_source] = useState(getInitialSource(src, sourceMapper));
+        const [source, set_source] = useState(cacheValidator ? {} : getInitialSource(src, sourceMapper));
         const [error, set_error] = useState(false);
         const [resp, set_resp] = useState(null);
 
         useEffect(() => {
             const cache = sourceMapper(src);
-            if (cache && !isNull(cache.local)) {
-                set_source({url: cache.local, statusCode: null, message: null});
-            } else if (cache && (!isNull(cache.message) || !isNull(cache.statusCode))) {
-                set_source({
-                    url: src,
-                    statusCode: cache.statusCode,
-                    message: cache.message
-                });
-            } else {
-                const componentProps = {
-                    [sourceProperty || 'source']: src,
-                    ...props
-                };
-                AsyncCache.select({
-                    url: src,
-                    ...(typeof mapToRequestOptions === 'function' ? mapToRequestOptions(componentProps) : null)
-                }, (event) => {
-                    set_resp(event);
-                }).then((response) => {
-                    if (response.statusCode !== source.statusCode || response.url !== source.url || response.message !== source.message) {
-                        set_source(response);
-                        if (!isNull(response.statusCode) || !isNull(response.message)) {
-                            if (typeof onRequestError === 'function') {
-                                onRequestError(src, response.statusCode, response.message);
-                            }
-                        } else {
-                            if (typeof onSourceMapped === 'function') {
-                                onSourceMapped(src, response.url);
+            const handleSourceChanged = (cache) => {
+                if (cache && !isNull(cache.local)) {
+                    set_source({url: cache.local, statusCode: null, message: null});
+                } else if (cache && (!isNull(cache.message) || !isNull(cache.statusCode))) {
+                    set_source({
+                        url: src,
+                        statusCode: cache.statusCode,
+                        message: cache.message
+                    });
+                } else {
+                    const componentProps = {
+                        [sourceProperty || 'source']: src,
+                        ...props
+                    };
+                    AsyncCache.select({
+                        url: src,
+                        ...(typeof mapToRequestOptions === 'function' ? mapToRequestOptions(componentProps) : null)
+                    }, (event) => {
+                        set_resp(event);
+                    }).then((response) => {
+                        if (response.statusCode !== source.statusCode || response.url !== source.url || response.message !== source.message) {
+                            set_source(response);
+                            if (!isNull(response.statusCode) || !isNull(response.message)) {
+                                if (typeof onRequestError === 'function') {
+                                    onRequestError(src, response.statusCode, response.message);
+                                }
+                            } else {
+                                if (typeof onSourceMapped === 'function') {
+                                    onSourceMapped(src, response.url);
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
+            };
+            if (typeof cacheValidator === "function") {
+                cacheValidator(cache, handleSourceChanged);
+            } else {
+                handleSourceChanged(cache);
             }
         }, [src]);
 

@@ -1,6 +1,6 @@
 {
   "name": "react-native-async-cache",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "cache network resources, videos, images.",
   "repository": {
     "type": "git",
@@ -8,7 +8,8 @@
     "baseUrl": "https://github.com/sitorhy/react-native-async-cache"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "react-native-cache"
   ],
   "author": {
     "name": "sitorhy",

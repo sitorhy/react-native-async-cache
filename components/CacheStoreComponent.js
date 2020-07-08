@@ -10,6 +10,7 @@ export default function (
         sourceProperty = 'source',
         invokeOnComponentErrorProperty,
         invokeOnComponentLoadProperty,
+        cacheValidator,
         store = new StoreProvider()
     }
 ) {
@@ -52,7 +53,8 @@ export default function (
                 if (store) {
                     store.error(url, code, message);
                 }
-            }
+            },
+            cacheValidator
         }
     );
 }
