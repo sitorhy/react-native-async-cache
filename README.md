@@ -8,6 +8,9 @@
 
 `$ react-native link react-native-async-cache`
 
+
+<br>
+
 ## API
 
 ### Promise select(options)
@@ -20,9 +23,13 @@ If the file downloaded, resolve the url as local path, otherwise resolve the req
 | Option | Optional | Type | Description |
 | :-----| ----: | ----: | :----: |
 | url | NO | String | the network resource url |
-| headers | YES | Map<String,String> | request headers |
+| headers | YES | Map<String,String> | http request headers |
 | subDir | YES | String | name of directory where the file save to |
-| extension | YES | String | file extension |
+| extension | YES | String | file extension (e.g ''.jpg" or "jpg") |
+| id | YES | String | file unique identification, advance usage |
+| data | YES | String | binary custom data |
+| dataType | YES | String | type of custom data, "text", "base64" or "base64Url" |
+| sign | YES | String | file identification obfuscation |
 
 + Result
 
@@ -35,57 +42,51 @@ If the file downloaded, resolve the url as local path, otherwise resolve the req
 
 + Usage example
 ```js
+import React from "react";
 import RNAsyncCache from 'react-native-async-cache';
 
-RNAsyncCache.select({
-    url: "https://static.zerochan.net/Kouyafu.full.2927619.jpg"
-}).then((res) => {
-    const {url, statusCode, message} = res;
-    this.setState(
-        {img: url, statusCode, message}
-    );
-});
-
-// Component initial state
-
-state = {
-    img:"",
-    statusCode:0,
-    message:""
-};
-
-
-// Component render
-
-const {img, statusCode, message} = this.state;
-
-if(statusCode || message){
-    // request failed
-    return <Text>{statusCode} {message}</Text>
-}
-
-return img ? <Loading /> : <Image source={{uri: img}}/>
-```
-
-+ Optional Cache Validator
-```javascript
+export default class extends React.Component
 {
-    cacheValidator:(cache,callback)=>{
-        if(cache && !cache.local){
-            callback(cache);
+    componentDidMount(){
+        RNAsyncCache.select({
+            url: "https://static.zerochan.net/Kouyafu.full.2927619.jpg"
+        }).then((res) => {
+            const {url, statusCode, message} = res;
+            this.setState(
+                {img: url, statusCode, message}
+            );
+        });
+    }
+
+    // Component initial state
+
+    state = {
+        img:"",
+        statusCode: 0,
+        message:""
+    };
+
+
+    // Component render
+
+    render()
+    {
+        const {img, statusCode, message} = this.state;
+
+        if(statusCode || message){
+            // request failed
+            return <Text>{statusCode} {message}</Text>;
         }
-        else {
-            fs.exists(cache).then(exists=>{
-               callback(exists?cache:null);
-            });    
-        }       
+
+    	return img ? <Text>Loading...</Text>: <Image source={{uri: img}}/>;
     }
 }
+
 ```
 
 <br>
 
-### Promise<Void> trash(options)
+### Promise trash(options)
 
 Empty the cache directory.
 
@@ -108,6 +109,8 @@ Try to check http status code of the url is 200 OK.
 | url | NO | String | network resource url |
 | statusCodeLeft | YES | Integer | min valid status code |
 | statusCodeRight | YES | Integer | max valid status code |
+| accessibleMethod | YES | String | http method, default "HEAD" |
+| headers | YES | Map<String,String> | request headers |
 
 + Result
 
@@ -118,6 +121,33 @@ Try to check http status code of the url is 200 OK.
 | message | String | description of failure |
 | size | Number | total bytes of resource, may be -1 if server not support `Content-Length`|
 | url | String | request url |
+
+```javascript
+import React from "react";
+import RNAsyncCache from 'react-native-async-cache';
+import {Image, Text} from "react-native";
+
+export default class extends React.Component {
+    state = {
+        error:""
+    };
+
+    render(){
+        const {error} = this.state;
+        const img = "https://i.pximg.net/img-master/img/2020/04/04/00/10/00/80545109_p0_master1200.jpg";
+
+        return error ? (<Text>{error}</Text>) : <Image source={{uri:img}} onError={()=>{
+            RNAsyncCache.accessible({
+                url:img
+            }).then(({statusCode, message})=>{
+                this.setState({
+                    error: statusCode + "\n" + message
+                });
+            });
+        }} />
+    }
+}
+```
 
 <br>
 
@@ -176,6 +206,7 @@ Cache a file manually.
 | url | NO | String |
 | subDir | YES | String |
 | extension  | YES | String |
+| headers | YES | Map<String,String> | request headers |
 
 + onProgress Callback
 
@@ -199,7 +230,7 @@ Cache a file manually.
 
 ### void post(options)
 
-delegate a background download task.
+delegate a background download task or create a cache with url and exists data.
 
 + Request Options
 
@@ -209,6 +240,11 @@ delegate a background download task.
 | headers | YES | Map<String,String> |
 | subDir | YES | String |
 | extension  | YES | String |
+| headers | YES | Map<String,String> | request headers |
+| data | YES | String | custom data |
+| dataType | YES | String | "text", bianary use "base64" or "base64Url" |
+
+<br>
 
 ## Cache Component
 
@@ -224,13 +260,13 @@ delegate a background download task.
 | sourceMapper | YES | Function | map url to local path |
 | onSourceMapped | YES | Function | invoked on url accepted |
 | onRequestError | YES | Function | invoked on url has been checked not accessible |
-| cacheValidator | YES | Function | confirm the cache is valid |
+| cacheValidator | YES | Function | confirm the cache is valid, usually not need it |
 
 ### Usage
 
 ```js
 import {CacheComponent} from 'react-native-async-cache';
-import {Image} from 'react-native';
+import {Image,View} from 'react-native';
 
 const CacheImage =  CacheComponent(
     {
@@ -254,15 +290,24 @@ const CacheImage =  CacheComponent(
 
 // render component
 
-return (
-    <View style={{flex: 1, alignItems: "center"}}>
-        <CacheImage source={"https://static.zerochan.net/Kouyafu.full.2792022.jpg"} style={{
-            width : Dimensions.get("window").width - 30,
-            height : Dimensions.get("window").height
-        }}/>
-    </View>
-)
+export default class extends React.Component
+{
+    render(){
+        return (
+            <View style={{flex: 1, alignItems: "center"}}>
+                <CacheImage source={"https://static.zerochan.net/Kouyafu.full.2792022.jpg"} 				
+					style={{
+                        width : Dimensions.get("window").width - 30,
+                        height : Dimensions.get("window").height
+                    }}
+                />
+            </View>
+        );
+    }
+}
 ```
+
+<br>
 
 ### CacheStoreComponent
 
@@ -270,7 +315,7 @@ create a `CacheComponent` with a memory store to reduce `select()` calls.
 
 ```js
 import {CacheStoreComponent} from 'react-native-async-cache';
-import {Image} from 'react-native';
+import {Text,View,Image} from "react-native";
 
 const CacheStoreImage =  CacheStoreComponent(
     {
@@ -296,14 +341,16 @@ const CacheStoreImage =  CacheStoreComponent(
 
 // render component
 
-return (
-    <View style={{flex: 1, alignItems: "center"}}>
-       <CacheStoreImage source={"https://static.zerochan.net/Fuji.Choko.full.2920380.jpg"} style={{
-           width : Dimensions.get("window").width - 30,
-           height : Dimensions.get("window").height
-       }}/>
-   </View>
-)
+export default ()=>{
+    return (
+        <View style={{flex: 1, alignItems: "center"}}>
+           <CacheStoreImage source={"https://static.zerochan.net/Fuji.Choko.full.2920380.jpg"} style={{
+               width : Dimensions.get("window").width - 30,
+               height : Dimensions.get("window").height
+           }}/>
+       </View>
+    );
+}
 ```
 + Custom StoreProvider Example
 
@@ -324,6 +371,7 @@ class PersistenceStoreProvider extends StoreProvider {
     }
     
     get(url){
+        ++this.access_time;
         if(this.access_time > 100){
             this.access_time = 0;
             this.serialize();
@@ -338,6 +386,7 @@ class PersistenceStoreProvider extends StoreProvider {
     }
     
     clear(){
+        // optional, call it when local file not found
         this.caches = [];
         AsyncStorage.setItem('caches',JSON.stringify([]));
     }
@@ -345,14 +394,44 @@ class PersistenceStoreProvider extends StoreProvider {
 
 // create CacheStoreComponent
 
-CacheStoreComponent({ 
+export default CacheStoreComponent({ 
     store: new PersistenceStoreProvider(),
-    ...
+    // ...
 });
 
 ```
 
-Advanced usage, StoreProvider interface
++ Optional cache validator
+
+```javascript
+
+// improt fs from "react-native-fs";
+
+// config
+const config = {
+    store: new PersistenceStoreProvider(),
+    // ...
+    cacheValidator:(cache,callback)=>{
+        if(cache && !cache.local){
+            callback(cache);
+        }
+        else {
+            fs.exists(cache).then(exists=>{
+               callback(exists ? cache : null);
+               if(!exists)
+               {
+                    config.store.clear();
+               }
+            });    
+        }       
+    }
+}
+
+export default CacheStoreComponent(config);
+```
+
++ Advanced usage, StoreProvider interface
+
 ```typescript
 interface StoreProvider {
     get(url: string): string;
@@ -362,7 +441,7 @@ interface StoreProvider {
     error(url: string, code: number, message: string): void
 }
 ```
-| Callback Method | Description | 
+| Callback Method | Description |
 | :-----| ----: |
 | get | return nullable cache file path with url |
 | set | associate local path to url  |

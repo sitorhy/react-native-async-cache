@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReadableType;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,7 +25,12 @@ public class Request {
     private String accessibleMethod = "HEAD";
     private boolean rewrite = false;
     private String extension = null;
+    private DataType dataType;
+    private byte[] data = null;
+    private Charset charset = Charset.forName("utf-8");
+    private String sign = null;
 
+    private String __data = null;
     private String __taskId = null;
     private HashMap<String, String> __headersMap;
 
@@ -50,6 +56,8 @@ public class Request {
         }
         if (request.hasKey(Constants.ID))
             id = request.getString(Constants.ID);
+        if (request.hasKey(Constants.SIGN))
+            sign = request.getString(Constants.SIGN);
         if (request.hasKey(Constants.URL))
             url = request.getString(Constants.URL);
         if (request.hasKey(Constants.HEADERS) && request.getType(Constants.HEADERS) == ReadableType.Map)
@@ -60,6 +68,34 @@ public class Request {
             accessibleMethod = request.getString(Constants.ACCESSIBLE_METHOD);
         if (request.hasKey(Constants.REWRITE) && request.getType(Constants.REWRITE) == ReadableType.Boolean)
             rewrite = request.getBoolean(Constants.REWRITE);
+        if (request.hasKey(Constants.DATA) && request.getType(Constants.DATA) == ReadableType.String) {
+            if (request.hasKey(Constants.DATA_TYPE) && request.getType(Constants.DATA_TYPE) == ReadableType.String) {
+                this.dataType = DataType.valueOf(request.getString(Constants.DATA_TYPE));
+            }
+            if (request.hasKey(Constants.DATA_CHARSET) && request.getType(Constants.DATA_CHARSET) == ReadableType.String) {
+                try {
+                    charset = Charset.forName(request.getString(Constants.DATA_CHARSET));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            __data = request.getString(Constants.DATA);
+        }
+    }
+
+    public byte[] getData() throws Exception {
+        if (__data == null)
+            return null;
+        if (data == null) {
+            if (dataType == DataType.base64) {
+                data = Common.decodeBase64String(__data, charset);
+            } else if (dataType == DataType.base64URL) {
+                data = Common.decodeBase64URLString(__data, charset);
+            } else {
+                data = __data.getBytes(charset);
+            }
+        }
+        return data;
     }
 
     public HashMap<String, String> getHeadersMap() {
@@ -86,7 +122,7 @@ public class Request {
         if (__taskId != null && !__taskId.isEmpty())
             return __taskId;
         try {
-            __taskId = Common.selectTaskId(id, url);
+            __taskId = Common.selectTaskId(id, url, sign);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }

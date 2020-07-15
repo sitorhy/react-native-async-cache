@@ -189,27 +189,55 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
         if (tasks.contains(taskId)) {
             return;
         }
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                HashMap<String, String> headers = request.getHeadersMap();
-                try {
-                    AccessibleResult urlAccessible = request.checkUrlAccessible();
-                    if (urlAccessible.isAccessible()) {
-                        if (request.isRewrite() || target.isDirectory()) {
-                            if (target.exists())
-                                target.delete();
+
+        byte[] postData;
+        try {
+            postData = request.getData();
+        } catch (Exception e) {
+            tasks.remove(taskId);
+            sendPostedEvent(request.getUrl(), "", -1, e.getMessage(), -1);
+            e.printStackTrace();
+            return;
+        }
+
+        if (postData == null) {
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    HashMap<String, String> headers = request.getHeadersMap();
+                    try {
+                        AccessibleResult urlAccessible = request.checkUrlAccessible();
+                        if (urlAccessible.isAccessible()) {
+                            if (request.isRewrite() || target.isDirectory()) {
+                                if (target.exists())
+                                    target.delete();
+                            }
+                            download(request, null, false);
+                        } else {
+                            sendPostedEvent(request.getUrl(), "", urlAccessible.getResponseCode(), urlAccessible.getMessage(), -1);
                         }
-                        download(request, null, false);
-                    } else {
-                        sendPostedEvent(request.getUrl(), "", urlAccessible.getResponseCode(), urlAccessible.getMessage(), -1);
+                    } catch (Exception e) {
+                        tasks.remove(taskId);
                     }
-                } catch (Exception e) {
-                    tasks.remove(taskId);
                 }
-            }
-        };
-        execute(task, taskId);
+            };
+            execute(task, taskId);
+        } else {
+            final byte[] finalData = postData;
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Common.writeDataToFile(request.generateTargetFile(), finalData);
+                    } catch (IOException e) {
+                        tasks.remove(taskId);
+                        sendPostedEvent(request.getUrl(), "", -1, e.getMessage(), -1);
+                        e.printStackTrace();
+                    }
+                }
+            };
+            execute(task, taskId);
+        }
     }
 
     private void rejectSelect(Promise promise, WritableMap map, String url) {
@@ -374,17 +402,23 @@ public class ReactNativeAsyncCacheModule extends ReactContextBaseJavaModule {
                         final File target = request.generateTargetFile();
                         if (!target.exists()) {
                             try {
-                                AccessibleResult accessibleResult = request.checkUrlAccessible();
-                                if (!accessibleResult.isAccessible()) {
-                                    WritableMap errResp = Arguments.createMap();
-                                    errResp.putInt(Constants.STATUS_CODE, accessibleResult.getResponseCode());
-                                    errResp.putString(Constants.MESSAGE, accessibleResult.getMessage());
-                                    rejectSelect(promise, errResp, url);
+                                final byte[] data = request.getData();
+                                if (data == null) {
+                                    AccessibleResult accessibleResult = request.checkUrlAccessible();
+                                    if (!accessibleResult.isAccessible()) {
+                                        WritableMap errResp = Arguments.createMap();
+                                        errResp.putInt(Constants.STATUS_CODE, accessibleResult.getResponseCode());
+                                        errResp.putString(Constants.MESSAGE, accessibleResult.getMessage());
+                                        rejectSelect(promise, errResp, url);
+                                    } else {
+                                        post(request);
+                                        rejectSelect(promise, Arguments.createMap(), url);
+                                    }
                                 } else {
                                     post(request);
                                     rejectSelect(promise, Arguments.createMap(), url);
                                 }
-                            } catch (IOException e) {
+                            } catch (Exception e) {
                                 WritableMap errResp = Arguments.createMap();
                                 errResp.putInt(Constants.STATUS_CODE, -1);
                                 errResp.putString(Constants.MESSAGE, e.getMessage());

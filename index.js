@@ -1,4 +1,3 @@
-import React, {useState, useEffect} from 'react';
 import {NativeModules} from 'react-native';
 
 const {ReactNativeAsyncCache} = NativeModules;
@@ -14,5 +13,7 @@ export CacheComponent from './components/CacheComponent';
 export CacheStoreComponent from './components/CacheStoreComponent';
 
 export StoreProvider from './components/DefaultStoreProvider';
+
+export DataType from "./components/DataType";
 
 export default AsyncCache;

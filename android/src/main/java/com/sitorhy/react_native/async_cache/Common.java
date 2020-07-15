@@ -1,16 +1,20 @@
 package com.sitorhy.react_native.async_cache;
 
 import android.content.Context;
+import android.util.Base64;
 
 import androidx.annotation.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -107,6 +111,12 @@ public class Common {
         return new File(path + File.separator + generateTargetFileName(taskId, extension));
     }
 
+    public static void writeDataToFile(File file, byte[] data) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        fileOutputStream.write(data);
+        fileOutputStream.close();
+    }
+
     public static void download(DownloadFeedback feedback, Context context, String url, Map<String, String> headers, final File target, int timeout) throws IOException {
         if (url == null || url.isEmpty()) {
             throw new IllegalArgumentException("url is not allow empty");
@@ -173,12 +183,12 @@ public class Common {
         }
     }
 
-    public static String selectTaskId(String id, String url) throws NoSuchAlgorithmException {
+    public static String selectTaskId(String id, String url, String sign) throws NoSuchAlgorithmException {
         if (id != null && !id.isEmpty()) {
             return id;
         }
         MessageDigest md5 = MessageDigest.getInstance("MD5");
-        byte[] md5Bytes = md5.digest(url.getBytes());
+        byte[] md5Bytes = md5.digest(sign == null || sign.isEmpty() ? url.getBytes() : (url + sign).getBytes());
         StringBuilder stringBuffer = new StringBuilder();
         for (int i = 0; i < md5Bytes.length; i++) {
             int val = ((int) md5Bytes[i]) & 0xff;
@@ -187,5 +197,15 @@ public class Common {
             stringBuffer.append(Integer.toHexString(val));
         }
         return stringBuffer.toString();
+    }
+
+    static public byte[] decodeBase64String(String str, Charset charset) throws Exception {
+        byte[] decode = Base64.decode(str.getBytes(charset), Base64.DEFAULT);
+        return decode;
+    }
+
+    static public byte[] decodeBase64URLString(String str, Charset charset) throws Exception {
+        byte[] decode = Base64.decode(str.getBytes(charset), Base64.URL_SAFE);
+        return decode;
     }
 }

@@ -24,4 +24,8 @@ public class Constants {
     public static String EXISTS = "exists";
     public static String REWRITE = "rewrite";
     public static String EXTENSION = "extension";
+    public static String DATA = "data";
+    public static String DATA_TYPE = "dataType";
+    public static String DATA_CHARSET = "dataCharset";
+    public static String SIGN = "sign";
 }

@@ -1,5 +1,6 @@
 import {NativeModules} from 'react-native';
 
+import DataType from "./DataType";
 import ProgressEmitter from './ProgressEmitter';
 import PostEmitter from './PostEmitter';
 import {getUrlExtension} from "../lib/common";
@@ -19,7 +20,7 @@ function executeDeclaredMethod(method, params) {
     }
 }
 
-function mergeOptions(options) {
+function mergeOptions(options={}) {
     const opts = {
         extension: typeof options.url === "string" ? getUrlExtension(options.url, true) : "",
         ...DEFAULT_OPTIONS,
@@ -40,7 +41,11 @@ const DEFAULT_OPTIONS = {
     targetDir: DocumentDirectory,
     accessibleMethod: 'HEAD',
     timeout: 12000,
+    data: null,
+    dataType: DataType.TEXT,
+    dataCharset: 'utf-8',
     subDir: '',
+    sign: '',
     id: ''
 };
 

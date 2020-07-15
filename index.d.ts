@@ -1,4 +1,10 @@
-import React from 'react';
+import * as React from 'react';
+
+export enum DataType {
+    TEXT = "text",
+    BINARY_BASE64 = "base64",
+    BINARY_SAFE_BASE64 = "base64URL"
+}
 
 export class RequestOptions {
     url: string;
@@ -10,6 +16,10 @@ export class RequestOptions {
     statusCodeLeft?: number;
     statusCodeRight?: number;
     rewrite?: boolean;
+    data?: string;
+    dataType?: DataType;
+    dataCharset?: string;
+    sign?: string;
 }
 
 export class SelectResponse {
