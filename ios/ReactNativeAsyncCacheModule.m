@@ -182,42 +182,62 @@ RCT_EXPORT_MODULE(ReactNativeAsyncCache);
   }
   [self signTask:taskId];
   [operationQueue addOperationWithBlock:^{
-    [request checkUrlAccessible:^(AccessibleResult * _Nonnull accessible) {
-      NSString * targetPath = [request generateTargetFilePath];
-      if(accessible.accessible)
-      {
-        NSFileManager * defaultManager = [NSFileManager defaultManager];
-        BOOL isDir;
-        BOOL exists = [defaultManager fileExistsAtPath:targetPath isDirectory:&isDir];
-        if(exists)
+    NSData * data;
+    NSString * targetPath = [request generateTargetFilePath];
+    
+    @try {
+      data = [request getData];
+    } @catch (NSException *exception) {
+      [self emitPostedEvent:request.url targetPath:targetPath fileSize:-1 errorCode:-1 errorMessage:exception.name taskId:taskId];
+      return;
+    }
+    
+    if(!data)
+    {
+      [request checkUrlAccessible:^(AccessibleResult * _Nonnull accessible) {
+        if(accessible.accessible)
         {
-          NSError * error = nil;
-          NSDictionary<NSFileAttributeKey, id> * attrs = nil;
-          if(request.rewrite || isDir)
+          NSFileManager * defaultManager = [NSFileManager defaultManager];
+          BOOL isDir;
+          BOOL exists = [defaultManager fileExistsAtPath:targetPath isDirectory:&isDir];
+          if(exists)
           {
-            [defaultManager removeItemAtPath:targetPath error:&error];
+            NSError * error = nil;
+            NSDictionary<NSFileAttributeKey, id> * attrs = nil;
+            if(request.rewrite || isDir)
+            {
+              [defaultManager removeItemAtPath:targetPath error:&error];
+            }
+            else
+            {
+              attrs = [defaultManager attributesOfItemAtPath:targetPath error:&error];
+            }
+            if(error)
+            {
+              [self emitPostedEvent:request.url targetPath:targetPath fileSize:-1 errorCode:error.code errorMessage:error.localizedDescription taskId:taskId];
+            }
+            else if(attrs)
+            {
+              [self emitPostedEvent:request.url targetPath:targetPath fileSize:[attrs fileSize] errorCode:0 errorMessage:nil taskId:taskId];
+              return;
+            }
           }
-          else
-          {
-            attrs = [defaultManager attributesOfItemAtPath:targetPath error:&error];
-          }
-          if(error)
-          {
-            [self emitPostedEvent:request.url targetPath:targetPath fileSize:0 errorCode:error.code errorMessage:error.localizedDescription taskId:taskId];
-          }
-          else if(attrs)
-          {
-            [self emitPostedEvent:request.url targetPath:targetPath fileSize:[attrs fileSize] errorCode:0 errorMessage:nil taskId:taskId];
-            return;
-          }
+          [self download:request resolver:nil rejecter:nil reportProgress:FALSE];
         }
-        [self download:request resolver:nil rejecter:nil reportProgress:FALSE];
+        else
+        {
+          [self emitPostedEvent:request.url targetPath:@"" fileSize:-1 errorCode:accessible.responseCode errorMessage:accessible.message taskId:taskId];
+        }
+      }];
+    }
+    else
+    {
+      @try {
+        [data writeToFile:targetPath atomically:TRUE];
+      } @catch (NSException *exception) {
+        [self emitPostedEvent:request.url targetPath:targetPath fileSize:-1 errorCode:-1 errorMessage:exception.name taskId:taskId];
       }
-      else
-      {
-        [self emitPostedEvent:request.url targetPath:@"" fileSize:-1 errorCode:accessible.responseCode errorMessage:accessible.message taskId:taskId];
-      }
-    }];
+    }
   }];
 }
 
@@ -381,43 +401,66 @@ RCT_REMAP_METHOD(select,createSelectRequestWithOptions:(NSDictionary *)options r
     return;
   }
   
-  [operationQueue addOperationWithBlock:^{
-    [request checkUrlAccessible:^(AccessibleResult * _Nonnull accessible) {
-      if(!accessible.accessible)
+  NSData * data;
+  @try {
+    data = [request getData];
+  } @catch (NSException * exception) {
+    NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
+    [resp setObject:exception.name forKey:[Constants MESSAGE]];
+    [resp setObject:@(-1) forKey:[Constants STATUS_CODE]];
+    [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
+    return;
+  }
+  
+  NSString * targetPath = [request generateTargetFilePath];
+  NSFileManager * defaultManager = [NSFileManager defaultManager];
+  BOOL isDir;
+  BOOL exists = [defaultManager fileExistsAtPath:targetPath isDirectory:&isDir];
+  
+  if(!isDir && exists)
+  {
+    NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
+    [resp setObject:[@"file://" stringByAppendingString:targetPath] forKey:[Constants URL]];
+    [resp setObject:[[NSNumber alloc] initWithBool:TRUE] forKey:[Constants SUCCESS]];
+    resolve(resp);
+  }
+  else
+  {
+    if(isDir)
+    {
+      NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
+      [resp setObject:@"can not write a directory" forKey:[Constants MESSAGE]];
+      [resp setObject:@(-1) forKey:[Constants STATUS_CODE]];
+      [self rejectSelect:resolve writeableResp:resp requestAddress:request.url];
+    }
+    else
+    {
+      if(data == nil)
       {
-        NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
-        [resp setObject:accessible.message forKey:[Constants MESSAGE]];
-        [resp setObject:@(accessible.responseCode) forKey:[Constants STATUS_CODE]];
-        [self rejectSelect:resolve writeableResp:resp requestAddress:request.url];
+        [operationQueue addOperationWithBlock:^{
+          [request checkUrlAccessible:^(AccessibleResult * _Nonnull accessible) {
+            if(!accessible.accessible)
+            {
+              NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
+              [resp setObject:accessible.message forKey:[Constants MESSAGE]];
+              [resp setObject:@(accessible.responseCode) forKey:[Constants STATUS_CODE]];
+              [self rejectSelect:resolve writeableResp:resp requestAddress:request.url];
+            }
+            else
+            {
+              [self post:request];
+              [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
+            }
+          }];
+        }];
       }
       else
       {
-        NSString * targetPath = [request generateTargetFilePath];
-        NSFileManager * defaultManager = [NSFileManager defaultManager];
-        BOOL isDir;
-        BOOL exists = [defaultManager fileExistsAtPath:targetPath isDirectory:&isDir];
-        if(!isDir && exists)
-        {
-          NSMutableDictionary * resp = [[NSMutableDictionary alloc] init];
-          [resp setObject:[@"file://" stringByAppendingString:targetPath] forKey:[Constants URL]];
-          [resp setObject:[[NSNumber alloc] initWithBool:TRUE] forKey:[Constants SUCCESS]];
-          resolve(resp);
-        }
-        else
-        {
-          if(isDir)
-          {
-            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
-          }
-          else
-          {
-            [self post:request];
-            [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
-          }
-        }
+        [self post:request];
+        [self rejectSelect:resolve writeableResp:[[NSMutableDictionary alloc] init] requestAddress:request.url];
       }
-    }];
-  }];
+    }
+  }
 }
 
 - (void)emitProgressEvent:(NSString *)url didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten

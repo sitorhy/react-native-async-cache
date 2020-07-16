@@ -42,12 +42,19 @@ static NSString * TASK_ID_PREFIX = @"rn_async_cache-";
   return cachePath;
 }
 
-+ (NSString *)selectTaskId:(NSString *)taskId url:(NSString *)url
++ (NSString *)selectTaskId:(NSString *)taskId url:(NSString *)url sign:(NSString *)sign
 {
   if (taskId != nil && [taskId length]>0) {
     return taskId;
   }
-  return [self md5:url];
+  if(sign && sign.length >0)
+  {
+    return [self md5:[url stringByAppendingString:sign]];
+  }
+  else
+  {
+    return [self md5:url];
+  }
 }
 
 + (NSString *) getUrlExtension:(NSString * _Nullable)url
@@ -153,6 +160,20 @@ static NSString * TASK_ID_PREFIX = @"rn_async_cache-";
   [request addValue:@"identity" forHTTPHeaderField:@"Accept-Encoding"];
   NSURLSessionTask * task = [session downloadTaskWithRequest:request];
   [task resume];
+}
+
+- (NSString*)safeUrlBase64Decode:(NSString*)safeUrlbase64Str
+{
+    // '-' -> '+'
+    // '_' -> '/'
+    // 不足4倍长度，补'='
+    NSMutableString * base64Str = [[NSMutableString alloc]initWithString:safeUrlbase64Str];
+    base64Str = (NSMutableString * )[base64Str stringByReplacingOccurrencesOfString:@"-" withString:@"+"];
+    base64Str = (NSMutableString * )[base64Str stringByReplacingOccurrencesOfString:@"_" withString:@"/"];
+    NSInteger mod4 = base64Str.length % 4;
+    if(mod4 > 0)
+        [base64Str appendString:[@"====" substringToIndex:(4-mod4)]];
+    return base64Str;
 }
 
 @end

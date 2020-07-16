@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *) getTargetDirectoryPath;
 
-+ (NSString *) selectTaskId:(NSString *)id url:(NSString *)url;
++ (NSString *) selectTaskId:(NSString *)id url:(NSString *)url sign:(NSString *)sign;
 
 + (NSString *) generateTargetFileName:(NSString *)taskId extractExtFromUrl:(NSString *)extension;
 
@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)checkUrlAccessible:(NSString *)method url:(nonnull NSString *)url requestHeaders:(NSDictionary *)headers statusCodeLeft:(long)statusCodeLeft statusCodeRight:(long)statusCodeRight timeout:(long)seconds accessibleReceiveCallback:(AccessibleCallback)callback;
 
 + (void)download:(NSString *)taskId delegate:(PostDelegate *)delegate url:(NSString *)url requestHeaders:(NSDictionary *)headers;
+
++ (NSString *)safeUrlBase64Decode:(NSString*)safeUrlbase64Str;
 
 @end
 

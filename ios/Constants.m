@@ -117,4 +117,24 @@
   return @"extension";
 }
 
++ (NSString *) DATA
+{
+  return @"data";
+}
+
++ (NSString *) DATA_TYPE
+{
+  return @"dataType";
+}
+
++ (NSString *) DATA_CHARSET
+{
+  return @"dataCharset";
+}
+
++ (NSString *) SIGN
+{
+  return @"sign";
+}
+
 @end

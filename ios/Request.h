@@ -6,6 +6,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^AccessibleCallback)(AccessibleResult * accessible);
 
+typedef enum : NSUInteger {
+  TEXT,
+  BASE64,
+  BASE64_URL,
+} DataType;
+
 @interface Request : NSObject
 
 -(instancetype)init:(NSDictionary *)options;
@@ -34,6 +40,14 @@ typedef void (^AccessibleCallback)(AccessibleResult * accessible);
 
 @property(nonatomic) NSString * extension;
 
+@property(nonatomic) DataType dataType;
+
+@property(nonatomic,nullable) NSData * data;
+
+@property(nonatomic,nullable) NSString * sign;
+
+@property(nonatomic,nullable) NSString * charset;
+
 - (NSString *)selectTaskId;
 
 - (NSString *)generateTargetFilePath;
@@ -43,6 +57,8 @@ typedef void (^AccessibleCallback)(AccessibleResult * accessible);
 - (BOOL)validateRequest:(RCTPromiseRejectBlock _Nullable)reject;
 
 - (void)checkUrlAccessible:(AccessibleCallback)callback;
+
+- (NSData *)getData;
 
 @end
 

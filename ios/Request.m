@@ -7,6 +7,8 @@
   NSString * __taskId;
   NSString * __targetPath;
   NSString * __targetDir;
+  NSString * __strData;
+  NSData * __data;
 }
 
 - (instancetype)init
@@ -21,6 +23,8 @@
     self.id = @"";
     self.url = @"";
     self.headers = nil;
+    self.charset = nil;
+    self.dataType = TEXT;
   }
   return self;
 }
@@ -40,6 +44,17 @@
   NSDictionary * dictHeaders = options[[Constants HEADERS]];
   NSNumber * nAccessible = options[[Constants ACCESSIBLE]];
   NSNumber * nRewrite = options[[Constants REWRITE]];
+  NSString * strSign = options[[Constants SIGN]];
+  NSString * strDataType = options[[Constants DATA_TYPE]];
+  NSString * strCharset = options[[Constants DATA_CHARSET]];
+  
+  NSString * strData = options[[Constants DATA]];
+  if(strData && ![strData isKindOfClass:[NSNull class]]){
+    __strData = options[[Constants DATA]];
+  }
+  else {
+    __strData = nil;
+  }
   
   if(nStatusCodeLeft && [nStatusCodeLeft isKindOfClass:[NSNumber class]])
   {
@@ -92,6 +107,31 @@
       }
     }
   }
+  if(nRewrite && [nRewrite isKindOfClass:[NSNumber class]])
+  {
+    self.rewrite=[nRewrite boolValue];
+  }
+  if(__strData && [__strData isKindOfClass:[NSString class]])
+  {
+    if(strSign && [strSign isKindOfClass:[NSString class]])
+    {
+      self.sign = strSign;
+    }
+    if(strCharset && [strCharset isKindOfClass:[NSString class]])
+    {
+      self.charset = strCharset;
+    }
+    if(strDataType && [strDataType isKindOfClass:[NSString class]])
+    {
+      if([strDataType isEqualToString:@"text"]) {
+        self.dataType = TEXT;
+      } else if([strDataType isEqualToString:@"base64"]) {
+        self.dataType = BASE64;
+      } else if([strDataType isEqualToString:@"base64URL"]) {
+        self.dataType = BASE64_URL;
+      }
+    }
+  }
   
   return self;
 }
@@ -104,7 +144,7 @@
   if (__taskId != nil && [__taskId length]>0) {
     return __taskId;
   }
-  __taskId = [Service selectTaskId:self.id url:self.url];
+  __taskId = [Service selectTaskId:self.id url:self.url sign:self.sign];
   return __taskId;
 }
 
@@ -146,6 +186,44 @@
 - (void)checkUrlAccessible:(AccessibleCallback)callback;
 {
   [Service checkUrlAccessible:self.accessibleMethod url:self.url requestHeaders:self.headers statusCodeLeft:self.statusCodeLeft statusCodeRight:self.statusCodeRight timeout:self.timeout accessibleReceiveCallback:callback];
+}
+
+- (NSData *)getData
+{
+  if(!__strData){
+    return nil;
+  }
+  
+  if(!self.data)
+  {
+    if(self.dataType == BASE64)
+    {
+      self.data = [[NSData alloc] initWithBase64EncodedString:__strData options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    } else if(_dataType ==BASE64_URL) {
+      // 编码
+      // '+' -> '-'
+      // '/' -> '_'
+      // '=' -> ''
+      
+      // 解码
+      NSString * base64Str = [Service safeUrlBase64Decode:__strData];
+      self.data = [[NSData alloc] initWithBase64EncodedString:base64Str options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    } else {
+      NSStringEncoding encoding = NSUTF8StringEncoding;
+      if(self.charset)
+      {
+        CFStringRef charsetRef = (__bridge CFStringRef)self.charset;
+        CFStringEncoding cfStingEncoding =  CFStringConvertIANACharSetNameToEncoding(charsetRef);
+        if(cfStingEncoding != kCFStringEncodingInvalidId)
+        {
+          encoding = CFStringConvertEncodingToNSStringEncoding(cfStingEncoding);
+        }
+      }
+      self.data = [__strData dataUsingEncoding:encoding];
+    }
+  }
+  
+  return self.data;
 }
 
 @end

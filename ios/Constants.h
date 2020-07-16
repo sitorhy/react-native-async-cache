@@ -50,6 +50,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *) EXTENSION;
 
++ (NSString *) DATA;
+
++ (NSString *) DATA_TYPE;
+
++ (NSString *) DATA_CHARSET;
+
++ (NSString *) SIGN;
+
 @end
 
 NS_ASSUME_NONNULL_END
